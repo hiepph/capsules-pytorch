@@ -50,10 +50,10 @@ class CapsulesLayer(nn.Module):
     def routing(self, x):
         """
         Args:
-        x: Tensor of shape [128, 8, 1152]
+            x: Tensor of shape [128, 8, 1152]
 
         Returns:
-        Vector output of capsule j
+            Vector output of capsule j
         """
         batch_size = x.size(0)
 
@@ -127,10 +127,10 @@ class CapsulesLayer(nn.Module):
         """Get output for each unit
 
         Args:
-        x: Shape (batch_size, C, H, W)
+            x: Shape (batch_size, C, H, W)
 
         Returns:
-        Vector output of capsule j
+            Vector output of capsule j
         """
         # Create 8 convolutional units
         units = [self.conv_units[i](x) for i, _ in enumerate(self.conv_units)]
@@ -167,7 +167,6 @@ class Decoder(nn.Module):
     a [784,] size image.
 
     This network is used both in training and testing.
-    It is scaled down by 0.0005 so that it does not domnitate margin loss during training.
     """
     def __init__(self, n_classes, output_unit_size,
                  input_height, input_width,
@@ -189,11 +188,11 @@ class Decoder(nn.Module):
         and reconstruct a [batch_size, fc3's output size] tensor representing batch images
 
         Args:
-        x: [batch_size,10,16] Output of digit capsule
-        target: [batch_size,10] One-hot MNIST dataset label
+            x: [batch_size,10,16] Output of digit capsule
+            target: [batch_size,10] One-hot MNIST dataset label
 
         Returns:
-        reconstruction: [batch_size, fc3's output size] Tensor of reconstructed image
+            reconstruction: [batch_size, fc3's output size] Tensor of reconstructed image
         """
         # Mask with y
         # masked cap shape: [batch_size,10,16,1]
@@ -216,10 +215,10 @@ class Decoder(nn.Module):
         b) during testing, mask all but longest capsule ((1,16) vector)
 
         Args:
-        out_digit_caps: [batch_size,10,16] Tensor output of DigitCaps layer
+            out_digit_caps: [batch_size,10,16] Tensor output of DigitCaps layer
 
         Returns:
-        masked: [batch_size,10,16,1] Masked capsule tensors
+            masked: [batch_size,10,16,1] Masked capsule tensors
         """
         # get capsule output length, ||v_c||
         v_length = torch.sqrt((out_digit_caps**2).sum(dim=2))
@@ -319,10 +318,80 @@ class CapsulesNet(nn.Module):
         return out_digit_caps
 
     def loss(self, image, out_digit_caps, target, size_average=True):
-        pass
+        """
+        Args:
+            image: [batch_size,1,28,28] MNIST samples
+            out_digit_caps: [batch_size,10,16,1] Output from DigitCaps layer
+            target: [batch_size,10] One-hot MNIST dataset labels
+            size_average: Enable mean loss (average loss over batch_size) if True
+
+        Returns:
+            total_loss: Scalar Variable of total loss
+            m_loss: Scalar of margin loss
+            recon_loss: Scalar of reconstruction loss
+        """
+        # Margin loss
+        m_loss = self.margin_loss(out_digit_caps, target)
+        if size_average:
+            m_loss = m_loss.mean()
+
+        # Reconstruction loss
+        # Reconstruct image from Decoder network
+        reconstruction = self.decoder(out_digit_caps, target)
+        recon_loss = self.reconstruction_loss(reconstruction, image)
+        # MSE
+        if size_average:
+            recon_loss = recon_loss.mean()
+        # Scale down recon_loss by 0.0005 so that it does not domnitate margin loss during training
+        recon_loss *= self.regularization_scale
+
+        return m_loss + recon_loss, m_loss, recon_loss
 
     def margin_loss(self, input, target):
-        pass
+        """
+        Args:
+            input: [batch_size,10,16,1] Output of DigitCaps layer
+            target: [batch_size,10] One-hot MNIST dataset labels
+
+        Returns:
+            l_c: Scalar of class loss (aka margin loss)
+        """
+        v_c = torch.sqrt((input**2).sum(dim=2, keepdim=True))
+
+        # Calculate left and right max terms
+        zero = Variable(torch.zeros(1))
+        if self.use_cuda:
+            zero = zero.cuda()
+        m_plus = 0.9
+        m_minus = 0.1
+        loss_lambda = 0.5
+
+        max_left = torch.max(m_plus - v_c, zero).view(batch_size, -1)**2
+        max_right = torch.max(v_c - m_minus, 0).view(batch_size, -1)**2
+        t_c = target
+
+        # l_c is margin loss for each digit of class c
+        l_c = t_c * max_left + loss_lambda * (1.0 - t_c) * max_right
+        l_c = l_c.sum(dim=1)
+
+        return l_c
 
     def reconstruction_loss(self, reconstruction, image):
-        pass
+        """This is the sum of squared differences between
+        reconstructed image (output of logistic units) and
+        original image (input image)
+
+        Args:
+            reconstruction: [batch_size,784] Decoder outputs of reconstructed image tensor
+            image: [batch_size,1,28,28] MNISt samples
+
+        Returns:
+            recon_error: Scalar Variable of reconstruction loss
+        """
+        # flat image
+        image = image.view(image.view(0), -1)
+
+        error = reconstruction - image
+        recon_error = torch.sum(error**2, dim=1)
+
+        return recon_error
