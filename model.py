@@ -160,6 +160,98 @@ class CapsulesLayer(nn.Module):
         return (sj_mag_sq / (1. + sj_mag_sq)) * (sj / sj_mag_sq)
 
 
+class Decoder(nn.Module):
+    """ The decoder consists of 3 fully-connected layers.
+    For each [10,16] output, mask out the incorrect predictions,
+    and send [16,] vector to the decoder network to reconstruct
+    a [784,] size image.
+
+    This network is used both in training and testing.
+    It is scaled down by 0.0005 so that it does not domnitate margin loss during training.
+    """
+    def __init__(self, n_classes, output_unit_size,
+                 input_height, input_width,
+                 n_conv_in_channel,
+                 use_cuda):
+        super(Decoder, self).__init__()
+
+        self.use_cuda = use_cuda
+
+        # 3 FC layers
+        self.fc1 = nn.Linear(n_classes * output_unit_size, 512)
+        self.fc2 = nn.Linear(512, 1024)
+        self.fc3 = nn.Linear(1024, input_height * input_width * n_conv_in_channel)
+        self.relu = nn.ReLU(inplace=True)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, target):
+        """Send output of `DigitCaps` layer (shape [batch_size,10,16]) to Decoder network,
+        and reconstruct a [batch_size, fc3's output size] tensor representing batch images
+
+        Args:
+        x: [batch_size,10,16] Output of digit capsule
+        target: [batch_size,10] One-hot MNIST dataset label
+
+        Returns:
+        reconstruction: [batch_size, fc3's output size] Tensor of reconstructed image
+        """
+        # Mask with y
+        # masked cap shape: [batch_size,10,16,1]
+        masked_caps = self.mask(x, self.use_cuda)
+
+        # Reconstruct image with 3 FC layers
+        # vector_j shape: [batch_size,16*10]
+        vector_j = masked_caps.view(x.view(0), 1)
+
+        # Forward
+        fc1_out = self.relu(self.fc1(vector_j))
+        fc2_out = self.relu(self.fc2(fc1_out))
+        reconstruction = self.sigmoid(self.fc3(fc2_out))
+
+        return reconstruction
+
+    def mask(self, out_digit_caps, use_cuda):
+        """Mask out all but the activity vector of the correct digit capsule
+        a) during training, mask all but the capsule (1,16) vector which match ground truth
+        b) during testing, mask all but longest capsule ((1,16) vector)
+
+        Args:
+        out_digit_caps: [batch_size,10,16] Tensor output of DigitCaps layer
+
+        Returns:
+        masked: [batch_size,10,16,1] Masked capsule tensors
+        """
+        # get capsule output length, ||v_c||
+        v_length = torch.sqrt((out_digit_caps**2).sum(dim=2))
+
+        # pick out the index of longest capsule output, v_length by
+        # masking the tensor by the max value in dim=1
+        _, max_index = v_length.max(dim=1)
+        max_index = max_index.data
+
+        # Masking with y
+        # In all batches, get the most active capsule
+        batch_size = out_digit_caps.size(0)
+        masked_v = [None] * batch_size
+        for i in range(batch_size):
+            sample = out_digit_caps[i]
+
+            # Mask out other capsules
+            v = Variable(torch.zeros(sample.size()))
+            if use_cuda:
+                v = v.cuda()
+
+            # Get maximum capsule index
+            max_caps_index = max_index[i]
+            v[max_caps_index] = sample[max_caps_index]
+            masked_v[i] = v
+
+        # Concatenate sequence of masked capsules tensors along the batch dimension
+        masked = torch.stack(masked_v, dim=0)
+
+        return masked
+
+
 class CapsulesNet(nn.Module):
     def __init__(self, n_conv_in_channel, n_conv_out_channel,
                  n_primary_unit, primary_unit_size,
@@ -210,3 +302,27 @@ class CapsulesNet(nn.Module):
                                     use_routing=True,
                                     n_routing=n_routing,
                                     use_cuda=use_cuda)
+
+        # Reconstruction loss
+        self.decoder = Decoder(n_classes, output_unit_size,
+                               input_height, input_width, n_conv_in_channel,
+                               use_cuda)
+
+    def forward(self, x):
+        # x shape: [128,1,28,28]
+        # out conv1 shape: [128,256,20,20]
+        out_conv1 = self.conv1
+        # out primary caps shape: [128,8,1152]
+        out_primary_caps = self.primary(out_conv1)
+        # out digit_caps shape: [128,10,16,1]
+        out_digit_caps = self.digits(out_primary_caps)
+        return out_digit_caps
+
+    def loss(self, image, out_digit_caps, target, size_average=True):
+        pass
+
+    def margin_loss(self, input, target):
+        pass
+
+    def reconstruction_loss(self, reconstruction, image):
+        pass
