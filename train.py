@@ -135,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_interval', type=int, default=10)
 
     args = parser.parse_args()
-    args.use_cuda = not args.no_cuda and torch.cuda.is_available()
+    args.use_cuda = (not args.no_cuda) and torch.cuda.is_available()
 
     print(args)
     main(args)
