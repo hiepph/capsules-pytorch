@@ -59,7 +59,7 @@ class CapsulesLayer(nn.Module):
 
         # swap dim1 and dim 2,
         # -> shape: [128, 1152, 8]
-        x = x.tranpose(1, 2)
+        x = x.transpose(1, 2)
 
         # Stack and add a dimension to a tensor
         # -> [128, 1152, 10, 8]
@@ -112,10 +112,10 @@ class CapsulesLayer(nn.Module):
             v_j1 = torch.cat([v_j] * self.in_channels, dim=1)
 
             # The agreement
-            # Tranpose u_hat with shape [128,1152,10,16,1] to [128,1152,10,,16]
+            # Transpose u_hat with shape [128,1152,10,16,1] to [128,1152,10,,16]
             # so we can do matrix product u_hat and v_i1
             # u_vj1 shape: [1,1152,10,1]
-            u_vj1 = torch.matmul(u_hat.tranpose(3, 4), v_j1).squeeze(4).mean(dim=0, keepdim=True)
+            u_vj1 = torch.matmul(u_hat.transpose(3, 4), v_j1).squeeze(4).mean(dim=0, keepdim=True)
 
             # Update routing (b_ij) by adding the agreement to initial logit
             b_ij = b_ij + u_vj1
@@ -155,7 +155,7 @@ class CapsulesLayer(nn.Module):
         # ||sj||^2
         sj_mag_sq = torch.sum(sj**2, dim, keepdim=True)
         # ||sj||
-        sj_mag = torch.sqrt(torch.sum)
+        sj_mag = torch.sqrt(sj_mag_sq)
 
         return (sj_mag_sq / (1. + sj_mag_sq)) * (sj / sj_mag_sq)
 
@@ -200,7 +200,7 @@ class Decoder(nn.Module):
 
         # Reconstruct image with 3 FC layers
         # vector_j shape: [batch_size,16*10]
-        vector_j = masked_caps.view(x.view(0), 1)
+        vector_j = masked_caps.view(x.size(0), -1)
 
         # Forward
         fc1_out = self.relu(self.fc1(vector_j))
@@ -356,6 +356,8 @@ class CapsulesNet(nn.Module):
         Returns:
             l_c: Scalar of class loss (aka margin loss)
         """
+        batch_size = input.size(0)
+
         v_c = torch.sqrt((input**2).sum(dim=2, keepdim=True))
 
         # Calculate left and right max terms
@@ -367,7 +369,7 @@ class CapsulesNet(nn.Module):
         loss_lambda = 0.5
 
         max_left = torch.max(m_plus - v_c, zero).view(batch_size, -1)**2
-        max_right = torch.max(v_c - m_minus, 0).view(batch_size, -1)**2
+        max_right = torch.max(v_c - m_minus, zero).view(batch_size, -1)**2
         t_c = target
 
         # l_c is margin loss for each digit of class c
@@ -389,7 +391,7 @@ class CapsulesNet(nn.Module):
             recon_error: Scalar Variable of reconstruction loss
         """
         # flat image
-        image = image.view(image.view(0), -1)
+        image = image.view(image.size(0), -1)
 
         error = reconstruction - image
         recon_error = torch.sum(error**2, dim=1)
