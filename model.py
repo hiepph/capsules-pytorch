@@ -133,7 +133,7 @@ class CapsulesLayer(nn.Module):
             Vector output of capsule j
         """
         # Create 8 convolutional units
-        units = [self.conv_units[i](x) for i, _ in enumerate(self.conv_units)]
+        units = [conv_unit(x) for conv_unit in self.conv_units]
 
         # Stack all 8 unit outputs
         # output shape: [128, 8, 32, 6, 6]
@@ -310,7 +310,7 @@ class CapsulesNet(nn.Module):
     def forward(self, x):
         # x shape: [128,1,28,28]
         # out conv1 shape: [128,256,20,20]
-        out_conv1 = self.conv1
+        out_conv1 = self.conv1(x)
         # out primary caps shape: [128,8,1152]
         out_primary_caps = self.primary(out_conv1)
         # out digit_caps shape: [128,10,16,1]
