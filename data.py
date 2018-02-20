@@ -29,3 +29,6 @@ class Data():
         features = images.view(10000, 28*28)
         writer.add_embedding(features, metadata=labels,
                              label_img=images.unsqueeze(1))
+
+    def load(self):
+        return self.train_loader, self.test_loader

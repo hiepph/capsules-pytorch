@@ -35,7 +35,7 @@ class CapsulesLayer(nn.Module):
             """
             self.conv_units = nn.ModuleList([
                 nn.Conv2d(in_channels=self.in_channels,
-                          out_chanels=32,
+                          out_channels=32,
                           kernel_size=9,
                           stride=2)
                 for _ in range(self.n_unit)
@@ -256,15 +256,15 @@ class CapsulesNet(nn.Module):
                  n_primary_unit, primary_unit_size,
                  n_classes, output_unit_size,
                  n_routing, regularization_scale,
-                 input_weight, input_height,
+                 input_width, input_height,
                  use_cuda):
         super(CapsulesNet, self).__init__()
 
         self.use_cuda = use_cuda
 
         # Image setting
-        self.image_width = image_width
-        self.image_height = image_height
+        self.image_width = input_width
+        self.image_height = input_height
         self.image_channel = n_conv_in_channel
 
         # known as lambda reconstruction
@@ -276,7 +276,7 @@ class CapsulesNet(nn.Module):
             # input shape (batch_size, C, H, W): [128, 1, 28, 28]
             # (CONV) -> [128, 256, 20, 20]
             nn.Conv2d(in_channels=n_conv_in_channel,
-                      out_chanels=n_conv_out_channel,
+                      out_channels=n_conv_out_channel,
                       kernel_size=9, stride=1),
             # (ReLU) -> [128, 256, 20, 20]
             nn.ReLU(inplace=True)
