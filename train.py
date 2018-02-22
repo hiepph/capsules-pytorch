@@ -4,6 +4,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torchvision.utils as vutils
 from torch.autograd import Variable
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
@@ -144,8 +145,6 @@ def main(args):
             pred = v_magnitude.data.max(1, keepdim=True)[1].cpu()
             correct += pred.eq(target_indices.view_as(pred)).sum()
 
-        # TODO: RECONSTRUCTION
-
         # Tensorboard log
         loss /= n_test_batches
         margin_loss /= n_test_batches
@@ -157,6 +156,21 @@ def main(args):
         writer.add_scalar('test/margin_loss', margin_loss, global_step)
         writer.add_scalar('test/recon_loss', recon_loss, global_step)
         writer.add_scalar('test/accuracy', accuracy, global_step)
+
+        # IMAGES RECONSTRUCTION
+        reconstruction = model.decoder(output, target)
+        # Resize to batch of images [batch_size, C, H, W]
+        recon_imgs = reconstruction.view(-1, args.n_conv_in_channel,
+                                         args.image_height, args.image_width)
+        # Visualize in Tensorboard
+        recon_grid = vutils.make_grid(recon_imgs.data,
+                                      normalize=True, scale_each=True)
+        original_grid = vutils.make_grid(data.data,
+                                         normalize=True, scale_each=True)
+        writer.add_image('test/original_{}_{}'.format(epoch, global_step),
+                         original_grid, global_step)
+        writer.add_image('test/reconstruction_{}_{}'.format(epoch, global_step),
+                         recon_grid, global_step)
 
         # STDOUT log
         template = """[Test {}]
