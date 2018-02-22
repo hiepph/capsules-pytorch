@@ -29,7 +29,7 @@ def main(args):
     # DATA
     data = Data(args)
     # Embed and visualize
-    # data.embed(writer)
+    data.embed(writer)
     # Load data loader
     train_loader, test_loader = data.load()
     n_train_batches = len(train_loader)
