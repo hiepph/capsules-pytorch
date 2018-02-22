@@ -62,6 +62,10 @@ def main(args):
         # Switch model to train mode
         model.train()
 
+        if args.use_cuda:
+            # Un-wrap model in DataParallel
+            model = model.module
+
         for i, (data, target) in enumerate(tqdm(train_loader, unit='batch')):
             # One-hot encode for labels
             target_one_hot = one_hot_encode(target, args.n_classes)
@@ -103,6 +107,10 @@ def main(args):
     def test(epoch):
         # Switch model to evaluate mode
         model.eval()
+
+        if args.use_cuda:
+            # Un-wrap model in DataParallel
+            model = model.module
 
         loss, margin_loss, recon_loss = 0., 0., 0.
         correct = 0.
