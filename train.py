@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import torch
 import torch.nn as nn
@@ -22,7 +23,7 @@ def one_hot_encode(target, length):
 
 def main(args):
     # Set logger
-    writer = SummaryWriter(log_dir='logs')
+    writer = SummaryWriter(log_dir=args.log_dir)
 
     # DATA
     data = Data(args)
@@ -90,10 +91,11 @@ def main(args):
 
             # STDOUT log
             if (i+1) % args.log_interval == 0:
-                template = """[Epoch {}/{}]
-                Total loss: {:.6f}, Margin loss: {:.6f}, Reconstruction loss: {:.6f}
-                """
+                template = "[Epoch {}/{}] " \
+                           "[Batch {}/{}] " \
+                           "Total loss: {:.6f}, Margin loss: {:.6f}, Reconstruction loss: {:.6f}"
                 tqdm.write(template.format(epoch, args.epochs,
+                                           i+1, n_train_batches,
                                            loss.data[0], margin_loss.data[0], recon_loss.data[0]))
 
 
@@ -105,7 +107,7 @@ def main(args):
         loss, margin_loss, recon_loss = 0., 0., 0.
         correct = 0.
 
-        for data, target in test_loader:
+        for data, target in tqdm(test_loader):
             target_indices = target
 
             # One-hot encode for labels
@@ -154,13 +156,19 @@ def main(args):
         Accuracy: {:.4f}%
         """
         tqdm.write(template.format(epoch,
-                                   loss.data[0], margin_loss.data[0], recon_loss.data[0],
+                                   loss, margin_loss, recon_loss,
                                    accuracy * 100))
 
 
-    # Save model (checkpoint) helper
-    def checkpoint():
-        pass
+    def checkpoint(epoch, parameters):
+        """Helper for saving model's parameters
+        """
+        if not os.path.exists(args.model_dir):
+            os.path.mkdir(args.model_dir)
+        model_path = os.path.join(args.model_dir,
+                                  'epoch_{}.pth'.format(epoch))
+        torch.save(parameters, model_path)
+        print('[INFO] Checkpoint {} for epoch {}'.format(model_path, epoch))
 
 
     # Start training
@@ -169,7 +177,7 @@ def main(args):
         test(epoch)
 
         if epoch % args.save_interval == 0:
-            checkpoint()
+            checkpoint(epoch, model.state_dict())
 
     writer.close()
 
@@ -196,6 +204,9 @@ if __name__ == '__main__':
     parser.add_argument('--log_interval', type=int, default=10)
     # parser.add_argument('--test_interval', type=int, default=10)
     parser.add_argument('--save_interval', type=int, default=10)
+
+    parser.add_argument('--log_dir', type=str, default='logs')
+    parser.add_argument('--model_dir', type=str, default='models')
 
     args = parser.parse_args()
     args.use_cuda = (not args.no_cuda) and torch.cuda.is_available()
