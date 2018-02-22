@@ -58,7 +58,7 @@ def main(args):
 
     # TRAINING
     # Train helper
-    def train(epoch):
+    def train(epoch, model):
         # Switch model to train mode
         model.train()
 
@@ -104,7 +104,7 @@ def main(args):
 
 
     # Test helper
-    def test(epoch):
+    def test(epoch, model):
         # Switch model to evaluate mode
         model.eval()
 
@@ -181,8 +181,8 @@ def main(args):
 
     # Start training
     for epoch in range(1, args.epochs+1):
-        train(epoch)
-        test(epoch)
+        train(epoch, model)
+        test(epoch, model)
 
         if epoch % args.save_interval == 0:
             checkpoint(epoch, model.state_dict())
