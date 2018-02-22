@@ -56,6 +56,8 @@ def main(args):
     # TRAINING
     # Train helper
     def train(epoch):
+        n_batches = len(train_loader)
+
         # Switch model to train mode
         model.train()
 
@@ -80,7 +82,13 @@ def main(args):
             loss.backward()
             optimizer.step()
 
-            # Log
+            # Tensorboard log
+            global_step = (epoch-1) * n_batches + i
+            writer.add_scalar('train/total_loss', loss.data[0], global_step)
+            writer.add_scalar('train/margin_loss' , margin_loss.data[0], global_step)
+            writer.add_scalar('train/reconstruction_loss', recon_loss.data[0], global_step)
+
+            # STDOUT log
             if (i+1) % args.log_interval == 0:
                 template = """[Epoch {}/{}]
                 Total loss: {:.6f}, Margin loss: {:.6f}, Reconstruction loss: {:.6f}
