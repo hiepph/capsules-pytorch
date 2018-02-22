@@ -126,8 +126,8 @@ def main(args):
             t_loss, m_loss, r_loss = model.loss(data, output, target,
                                                  size_average=False)
             loss += t_loss.data[0]
-            m_loss += m_loss.data[0]
-            r_loss += r_loss.data[0]
+            margin_loss += m_loss.data[0]
+            recon_loss += r_loss.data[0]
 
             # Count number of correct prediction
             # v_magnitude shape: [batch_size, 10, 1, 1]
