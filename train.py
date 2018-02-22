@@ -161,7 +161,7 @@ def main(args):
         reconstruction = model.decoder(output, target)
         # Resize to batch of images [batch_size, C, H, W]
         recon_imgs = reconstruction.view(-1, args.n_conv_in_channel,
-                                         args.image_height, args.image_width)
+                                         args.input_height, args.input_width)
         # Visualize in Tensorboard
         recon_grid = vutils.make_grid(recon_imgs.data,
                                       normalize=True, scale_each=True)
