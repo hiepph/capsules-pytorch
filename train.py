@@ -172,7 +172,7 @@ def main(args):
         """Helper for saving model's parameters
         """
         if not os.path.exists(args.model_dir):
-            os.path.mkdir(args.model_dir)
+            os.mkdir(args.model_dir)
         model_path = os.path.join(args.model_dir,
                                   'epoch_{}.pth'.format(epoch))
         torch.save(parameters, model_path)
