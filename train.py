@@ -30,6 +30,8 @@ def main(args):
     # data.embed(writer)
     # Load data loader
     train_loader, test_loader = data.load()
+    n_train_batches = len(train_loader)
+    n_test_batches = len(test_loader)
 
     # MODEL
     model = CapsulesNet(args.n_conv_in_channel, args.n_conv_out_channel,
@@ -56,8 +58,6 @@ def main(args):
     # TRAINING
     # Train helper
     def train(epoch):
-        n_batches = len(train_loader)
-
         # Switch model to train mode
         model.train()
 
@@ -83,7 +83,7 @@ def main(args):
             optimizer.step()
 
             # Tensorboard log
-            global_step = (epoch-1) * n_batches + i
+            global_step = (epoch-1) * n_train_batches + i
             writer.add_scalar('train/total_loss', loss.data[0], global_step)
             writer.add_scalar('train/margin_loss' , margin_loss.data[0], global_step)
             writer.add_scalar('train/reconstruction_loss', recon_loss.data[0], global_step)
@@ -96,9 +96,66 @@ def main(args):
                 tqdm.write(template.format(epoch, args.epochs,
                                            loss.data[0], margin_loss.data[0], recon_loss.data[0]))
 
+
     # Test helper
-    def test():
-        pass
+    def test(epoch):
+        # Switch model to evaluate mode
+        model.eval()
+
+        loss, margin_loss, recon_loss = 0., 0., 0.
+        correct = 0.
+
+        for data, target in test_loader:
+            target_indices = target
+
+            # One-hot encode for labels
+            target_one_hot = one_hot_encode(target, args.n_classes)
+
+            # Wrap inputs into Variable
+            data, target = Variable(data, volatile=True), Variable(target_one_hot)
+            if args.use_cuda:
+                data = data.cuda()
+                target = target.cuda()
+
+            # Forward
+            output = model(data)
+
+            # Calculate loss, and sum up
+            t_loss, m_loss, r_loss = model.loss(data, output, target,
+                                                 size_average=False)
+            loss += t_loss.data[0]
+            m_loss += m_loss.data[0]
+            r_loss += r_loss.data[0]
+
+            # Count number of correct prediction
+            # v_magnitude shape: [batch_size, 10, 1, 1]
+            v_magnitude = torch.sqrt((output**2).sum(dim=2, keepdim=True))
+            # pred shape: [batch_size, 1, 1, 1]
+            pred = v_magnitude.data.max(1, keepdim=True)[1].cpu()
+            correct += pred.eq(target_indices.view_as(pred)).sum()
+
+        # TODO: RECONSTRUCTION
+
+        # Tensorboard log
+        loss /= n_test_batches
+        margin_loss /= n_test_batches
+        recon_loss /= n_test_batches
+        accuracy = correct / len(test_loader.dataset)
+
+        global_step = epoch * n_train_batches
+        writer.add_scalar('test/total_loss', loss, global_step)
+        writer.add_scalar('test/margin_loss', margin_loss, global_step)
+        writer.add_scalar('test/recon_loss', recon_loss, global_step)
+        writer.add_scalar('test/accuracy', accuracy, global_step)
+
+        # STDOUT log
+        template = """[Test {}]
+        Total loss: {:.6f}, Margin loss: {:.6f}, Reconstruction loss: {:.6f}
+        Accuracy: {:.4f}%
+        """
+        tqdm.write(template.format(epoch,
+                                   loss.data[0], margin_loss.data[0], recon_loss.data[0],
+                                   accuracy * 100))
 
 
     # Save model (checkpoint) helper
@@ -109,9 +166,7 @@ def main(args):
     # Start training
     for epoch in range(1, args.epochs+1):
         train(epoch)
-
-        if epoch % args.test_interval == 0:
-            test()
+        test(epoch)
 
         if epoch % args.save_interval == 0:
             checkpoint()
@@ -139,7 +194,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--no_cuda', action='store_true', default=False)
     parser.add_argument('--log_interval', type=int, default=10)
-    parser.add_argument('--test_interval', type=int, default=10)
+    # parser.add_argument('--test_interval', type=int, default=10)
     parser.add_argument('--save_interval', type=int, default=10)
 
     args = parser.parse_args()
