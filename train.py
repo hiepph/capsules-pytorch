@@ -155,19 +155,20 @@ def main(args):
         writer.add_scalar('test/accuracy', accuracy, global_step)
 
         # IMAGES RECONSTRUCTION
-        reconstruction = model.decoder(output, target)
-        # Resize to batch of images [batch_size, C, H, W]
-        recon_imgs = reconstruction.view(-1, args.n_conv_in_channel,
-                                         args.input_height, args.input_width)
-        # Visualize in Tensorboard
-        recon_grid = vutils.make_grid(recon_imgs.data,
-                                      normalize=True, scale_each=True)
-        original_grid = vutils.make_grid(data.data,
-                                         normalize=True, scale_each=True)
-        writer.add_image('test/original_{}_{}'.format(epoch, global_step),
-                         original_grid, global_step)
-        writer.add_image('test/reconstruction_{}_{}'.format(epoch, global_step),
-                         recon_grid, global_step)
+        if epoch % args.recon_interval == 0:
+            reconstruction = model.decoder(output, target)
+            # Resize to batch of images [batch_size, C, H, W]
+            recon_imgs = reconstruction.view(-1, args.n_conv_in_channel,
+                                             args.input_height, args.input_width)
+            # Visualize in Tensorboard
+            recon_grid = vutils.make_grid(recon_imgs.data,
+                                          normalize=True, scale_each=True)
+            original_grid = vutils.make_grid(data.data,
+                                             normalize=True, scale_each=True)
+            writer.add_image('test/original_{}_{}'.format(epoch, global_step),
+                             original_grid, global_step)
+            writer.add_image('test/reconstruction_{}_{}'.format(epoch, global_step),
+                             recon_grid, global_step)
 
         # STDOUT log
         template = """[Test {}]
@@ -222,6 +223,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_cuda', action='store_true', default=False)
     parser.add_argument('--log_interval', type=int, default=10)
     parser.add_argument('--save_interval', type=int, default=5)
+    parser.add_argument('--recon_interval', type=int, default=5)
 
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--model_dir', type=str, default='models')
