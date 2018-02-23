@@ -7,7 +7,6 @@ class Data():
     def __init__(self, args):
         data_dir = 'dataset/fashionmnist'
         train_transform = transforms.Compose([
-            transforms.RandomCrop(28, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(25),
             transforms.ToTensor(),
