@@ -44,11 +44,8 @@ def main(args):
                         args.use_cuda)
 
     if args.use_cuda:
-        # Use multiple GPUs if possible
-        if torch.cuda.device_count() > 1:
-            print('[INFO] Using {} GPUs'.format(torch.cuda.device_count()))
-            model = nn.DataParallel(model)
-
+        print('[INFO] Using {} GPU(s)'.format(torch.cuda.device_count()))
+        model = nn.DataParallel(model)
         model.cuda()
 
     # Info
@@ -207,7 +204,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--epochs', type=int, default=10)
+    parser.add_argument('--epochs', type=int, default=25)
     parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--batch_size', type=int, default=128)
 
