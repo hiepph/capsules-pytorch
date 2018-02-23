@@ -11,8 +11,7 @@ class Data():
             transforms.Normalize((0.28604,), (0.35302,))
         ])
         test_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.28604,), (0.35302,))
+            transforms.ToTensor()
         ])
 
         self.train_dataset = datasets.FashionMNIST(data_dir, train=True,
@@ -26,7 +25,7 @@ class Data():
                                        shuffle=True)
         self.test_loader = DataLoader(dataset=self.test_dataset,
                                       batch_size=args.batch_size,
-                                      shuffle=False)
+                                      shuffle=True)
 
     def embed(self, writer):
         # (10000, 28, 28)
