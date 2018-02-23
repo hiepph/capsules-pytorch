@@ -6,16 +6,23 @@ from torch.utils.data import DataLoader
 class Data():
     def __init__(self, args):
         data_dir = 'dataset/fashionmnist'
-        transform = transforms.Compose([
+        train_transform = transforms.Compose([
+            transforms.RandomCrop(28, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(25),
+            transforms.ToTensor(),
+            transforms.Normalize((0.286,), (0.353,))
+        ])
+        test_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.286,), (0.353,))
         ])
 
         self.train_dataset = datasets.FashionMNIST(data_dir, train=True,
-                                                   transform=transform,
+                                                   transform=train_transform,
                                                    download=True)
         self.test_dataset = datasets.FashionMNIST(data_dir, train=False,
-                                                  transform=transform)
+                                                  transform=test_transform)
 
         self.train_loader = DataLoader(dataset=self.train_dataset,
                                        batch_size=args.batch_size,

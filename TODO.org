@@ -13,8 +13,8 @@
 * Improvement
 ** DONE std/mean normalization, 20 epochs
    CLOSED: [2018-02-23 Fri 11:58]
-** TODO Augmentation
-** TODO Smaller batch_size for test -> easy to visualize & increase accuracy
+** DONE Augmentation
+   CLOSED: [2018-02-23 Fri 12:18]
 ** TODO Interval for reconstruction
 
 * Plus
