@@ -1,0 +1,23 @@
+* Basics
+** DONE +Reconstruction Loss+ + Margin Loss -> Loss
+   CLOSED: [2018-02-14 Wed 21:13]
+** DONE (Data -> Train) pipeline
+   CLOSED: [2018-02-20 Tue 21:56]
+** DONE +Tensorboard+ -> +Test+ -> Checkpoint
+   CLOSED: [2018-02-22 Thu 12:28]
+** DONE Reconstruction in test
+   CLOSED: [2018-02-22 Thu 15:09]
+** DONE Train 50 epochs
+   CLOSED: [2018-02-22 Thu 17:09]
+
+* Improvement
+** TODO std/mean normalization, 20 epochs
+** TODO Augmentation
+** TODO Smaller batch_size for test -> easy to visualize & increase accuracy
+** TODO Interval for reconstruction
+
+* Plus
+** TODO Reconstruction with latent features (home)
+
+* Advanced
+** TODO Multiple GPUs (large batch_size) -> Refer cgan

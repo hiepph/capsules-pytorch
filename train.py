@@ -224,8 +224,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--no_cuda', action='store_true', default=False)
     parser.add_argument('--log_interval', type=int, default=10)
-    # parser.add_argument('--test_interval', type=int, default=10)
-    parser.add_argument('--save_interval', type=int, default=10)
+    parser.add_argument('--save_interval', type=int, default=5)
 
     parser.add_argument('--log_dir', type=str, default='logs')
     parser.add_argument('--model_dir', type=str, default='models')

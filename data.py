@@ -6,7 +6,10 @@ from torch.utils.data import DataLoader
 class Data():
     def __init__(self, args):
         data_dir = 'dataset/fashionmnist'
-        transform = transforms.ToTensor()
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.286,), (0.353,))
+        ])
 
         self.train_dataset = datasets.FashionMNIST(data_dir, train=True,
                                                    transform=transform,
@@ -19,7 +22,7 @@ class Data():
                                        shuffle=True)
         self.test_loader = DataLoader(dataset=self.test_dataset,
                                       batch_size=args.batch_size,
-                                      shuffle=True)
+                                      shuffle=False)
 
     def embed(self, writer):
         # (10000, 28, 28)
