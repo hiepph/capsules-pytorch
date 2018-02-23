@@ -7,11 +7,13 @@ class Data():
     def __init__(self, args):
         data_dir = 'dataset/fashionmnist'
         train_transform = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.28604,), (0.35302,))
         ])
         test_transform = transforms.Compose([
-            transforms.ToTensor()
+            transforms.ToTensor(),
+            transforms.Normalize((0.28604,), (0.35302,))
         ])
 
         self.train_dataset = datasets.FashionMNIST(data_dir, train=True,
