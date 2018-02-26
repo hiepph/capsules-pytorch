@@ -23,7 +23,10 @@
    CLOSED: [2018-02-26 Mon 16:06]
 
 * Plus
-** TODO Reconstruction with latent features (home)
+** TODO Reconstruction with latent features
+*** Retrain with checkpoint fixed issues -> Load model successfully
+** TODO Rotation/Scale/... (affine) images classification accuracy
+** TODO Overlap classification
 
 * Advanced
 ** TODO Multiple GPUs (large batch_size) -> Refer cgan
