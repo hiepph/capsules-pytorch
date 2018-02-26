@@ -18,6 +18,10 @@
 ** DONE Interval for reconstruction
    CLOSED: [2018-02-23 Fri 12:23]
 
+* Issues
+** DONE Checkpoint (DataParallel) -> Remove dataparallel (later)
+   CLOSED: [2018-02-26 Mon 16:06]
+
 * Plus
 ** TODO Reconstruction with latent features (home)
 

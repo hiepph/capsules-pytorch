@@ -45,7 +45,6 @@ def main(args):
 
     if args.use_cuda:
         print('[INFO] Using {} GPU(s)'.format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
         model.cuda()
 
     # Info
@@ -59,10 +58,6 @@ def main(args):
     def train(epoch, model):
         # Switch model to train mode
         model.train()
-
-        if args.use_cuda:
-            # Un-wrap model in DataParallel
-            model = model.module
 
         for i, (data, target) in enumerate(tqdm(train_loader, unit='batch')):
             # One-hot encode for labels
@@ -105,10 +100,6 @@ def main(args):
     def test(epoch, model):
         # Switch model to evaluate mode
         model.eval()
-
-        if args.use_cuda:
-            # Un-wrap model in DataParallel
-            model = model.module
 
         loss, margin_loss, recon_loss = 0., 0., 0.
         correct = 0.
