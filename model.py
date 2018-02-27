@@ -29,7 +29,7 @@ class CapsulesLayer(nn.Module):
         else:
             """ No routing between Conv1 and PrimaryCapsules
 
-            Paper: PrimaryCapsules is a convolutional  layer with 32 channels of
+            Paper: PrimaryCapsules is a convolutional layer with 32 channels of
             convolutional 8D capsules (i.e. each primary capsule contains
             8 convolutional units with a 9 × 9 kernel and a stride of 2)
             """
