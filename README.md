@@ -31,7 +31,7 @@ GPU | Training speed (min/epoch)
 
 Dataset | Routing | Reconstruction | Best test error | Best test accuracy
 :------:|:---:|:----:|:----:|:------:
-Fashion MNIST (Test error/Test accuracy) 3 | yes | 0.21 | 0.1850 | 88.11%
+Fashion MNIST | 3 | yes | 0.1850 | 88.11%
 
 ## References
 
