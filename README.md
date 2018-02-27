@@ -18,7 +18,7 @@ Disclaimer: **WIP**. Proceed at your own will.
 
 ## Usage
 
-+ Traing: `python main.py`
++ Training: `python main.py`
 
 GPU | Training speed (min/epoch)
 :--:|:-------------------------:
