@@ -2,7 +2,8 @@
 
 Yet another implementation of [Dynamic Routing Between Capsules](https://arxiv.org/abs/1710.09829) paper in Pytorch.
 
-Disclaimer: **WIP**. Proceed at your own will.
+Blog post: [Capsules Network walkthrough](https://hiepph.github.io/post/2018-03-06-capsules/)
+
 
 ## Requirements
 
@@ -16,6 +17,7 @@ Disclaimer: **WIP**. Proceed at your own will.
 
 + [tqdm](https://github.com/tqdm/tqdm)
 
+
 ## Usage
 
 + Training: `python train.py`
@@ -27,11 +29,13 @@ GPU | Training speed (min/epoch)
 
 + Tensorboard: `tensorboard --logdir logs` (check http://localhost:6006)
 
+
 ## Experiment
 
 Dataset | Routing | Reconstruction | Best test error | Best test accuracy
 :------:|:---:|:----:|:----:|:------:
 Fashion MNIST | 3 | yes | 0.1850 | 88.11%
+
 
 ## References
 
